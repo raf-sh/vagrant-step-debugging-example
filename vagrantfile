@@ -1,0 +1,32 @@
+VAGRANTFILE_API_VERSION = "2"
+
+vm_ip = "192.168.77.80"
+vm_name_virtualbox = "Step-debugging-example"
+
+if ARGV[0] == "up"
+    puts "\nPlease execute the following command before 'vagrant up' to bypass VirtualBox DHCP bug:"
+    puts "    VBoxManage dhcpserver remove --netname HostInterfaceNetworking-vboxnet0"
+    puts "\nYou can do that right now, in a different terminal window."
+    puts "Press <enter> to continue.\n\n"
+    $stdin.gets
+end
+
+Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
+    config.vm.box = "debian/jessie64"
+    config.vm.box_check_update = false
+    config.vm.hostname = "vagrant-debug"
+
+    if ARGV[0] == "up"
+        config.vm.network "private_network", ip: vm_ip
+        config.vm.post_up_message = "Vagrant for step debugging environment is up!"
+
+        config.vm.provider "virtualbox" do |vb|
+            vb.gui = true
+            vb.name = vm_name_virtualbox
+        end
+    end
+
+    if ARGV[0] == "up" or ARGV[0] == "provision"
+        config.vm.provision "shell", path: "setup.sh"
+    end
+end
